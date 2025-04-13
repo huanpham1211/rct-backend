@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+import jwt
+import datetime
+
 
 app = Flask(__name__)
 CORS(app)
@@ -41,6 +44,13 @@ def create_user():
     db.session.commit()
     return jsonify({"success": True, "message": "User created successfully."})
 
+def generate_token(user_id):
+    payload = {
+        'user_id': user_id,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+    }
+    token = jwt.encode(payload, 'your_secret_key', algorithm='HS256')
+    return token
 # ✅ Only run locally
 if __name__ == "__main__":
     with app.app_context():
