@@ -6,9 +6,11 @@ import os
 import jwt
 import datetime
 
-
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://rctmanager.com"])
+
+# ✅ Securely get secret key from environment variable
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
 
 # ✅ Use Render PostgreSQL or fallback to local SQLite
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///local.db").replace("postgres://", "postgresql://")
@@ -25,13 +27,27 @@ class Users(db.Model):
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
 
+# ✅ Token generator
+def generate_token(user_id):
+    payload = {
+        'user_id': user_id,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+    }
+    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+    return token
+
 # ✅ Login API
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
     user = Users.query.filter_by(username=data["username"]).first()
     if user and check_password_hash(user.password, data["password"]):
-        return jsonify({"success": True, "role": user.role})
+        token = generate_token(user.id)
+        return jsonify({
+            "success": True,
+            "role": user.role,
+            "token": token
+        })
     return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
 # ✅ Create user API
@@ -44,13 +60,6 @@ def create_user():
     db.session.commit()
     return jsonify({"success": True, "message": "User created successfully."})
 
-def generate_token(user_id):
-    payload = {
-        'user_id': user_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
-    }
-    token = jwt.encode(payload, 'your_secret_key', algorithm='HS256')
-    return token
 # ✅ Only run locally
 if __name__ == "__main__":
     with app.app_context():
