@@ -7,7 +7,7 @@ import jwt
 import datetime
 
 app = Flask(__name__)
-CORS(app, origins=["https://rctmanager.com"])
+CORS(app, resources={r"/api/*": {"origins": "https://rctmanager.com"}}, supports_credentials=True)
 
 # ✅ Securely get secret key from environment variable
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
@@ -59,6 +59,14 @@ def create_user():
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"success": True, "message": "User created successfully."})
+
+@app.route("/api/patients", methods=["POST"])
+def create_patient():
+    data = request.get_json()
+    # Simulate saving to DB — you'll replace this with real logic
+    print("Received patient data:", data)
+    return jsonify({"success": True, "message": "Patient created"}), 201
+
 
 # ✅ Only run locally
 if __name__ == "__main__":
