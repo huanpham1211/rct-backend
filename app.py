@@ -189,10 +189,20 @@ def handle_sites():
         data = request.get_json()
         if not data.get("name") or not data.get("address"):
             return jsonify({"message": "Name and address are required"}), 400
-        new_site = Site(name=data["name"], address=data["address"])
-        db.session.add(new_site)
-        db.session.commit()
-        return jsonify({"message": "Site created"}), 201
+
+        # Check for duplicate site name
+        existing_site = Site.query.filter_by(name=data["name"]).first()
+        if existing_site:
+            return jsonify({"message": "Site with this name already exists"}), 400
+
+        try:
+            new_site = Site(name=data["name"], address=data["address"])
+            db.session.add(new_site)
+            db.session.commit()
+            return jsonify({"message": "Site created"}), 201
+        except Exception as e:
+            print("Error creating site:", e)
+            return jsonify({"message": "Failed to create site"}), 500
 
     if request.method == "GET":
         sites = Site.query.all()
