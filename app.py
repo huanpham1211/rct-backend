@@ -7,7 +7,6 @@ import jwt
 import datetime
 from functools import wraps
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
-from app import db
 
 
 app = Flask(__name__)
