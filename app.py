@@ -7,6 +7,7 @@ import jwt
 from datetime import datetime, timedelta
 from functools import wraps
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
+from traceback import format_exc  # Add this at the top if not already
 
 
 app = Flask(__name__)
@@ -45,11 +46,13 @@ class Patient(db.Model):
     timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Site(db.Model):
-    __tablename__ = "sites"
+    __tablename__ = "site"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    address = db.Column(db.String(255), nullable=True)
-    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
+    name = db.Column(db.String(500), nullable=False)
+    location = db.Column(db.Text)
+    timestamp_created = db.Column(db.DateTime)
+    timestamp_updated = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
 
 class Study(db.Model):
     __tablename__ = 'study'
@@ -182,15 +185,15 @@ def handle_sites(current_user):
 
     if request.method == "POST":
         data = request.get_json()
-        if not data.get("name") or not data.get("address"):
-            return jsonify({"message": "Name and address are required"}), 400
+        if not data.get("name") or not data.get("location"):
+            return jsonify({"message": "Name and location are required"}), 400
 
         existing_site = Site.query.filter_by(name=data["name"]).first()
         if existing_site:
             return jsonify({"message": "Site with this name already exists"}), 400
 
         try:
-            new_site = Site(name=data["name"], address=data["address"])
+            new_site = Site(name=data["name"], location=data["location"], timestamp_created=datetime.utcnow())
             db.session.add(new_site)
             db.session.commit()
             return jsonify({"message": "Site created"}), 201
@@ -201,11 +204,13 @@ def handle_sites(current_user):
     if request.method == "GET":
         try:
             sites = Site.query.all()
-            return jsonify([{
+            return jsonify([
+            {
                 "id": s.id,
                 "name": s.name,
-                "address": s.address,
-                "created": s.timestamp_created.isoformat()
+                "location": s.location,
+                "created": s.timestamp_created.isoformat() if s.timestamp_created else None,
+                "updated": s.timestamp_updated.isoformat() if s.timestamp_updated else None
             } for s in sites])
         except Exception as e:
             print("Error fetching sites:", e)
