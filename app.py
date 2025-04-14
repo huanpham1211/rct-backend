@@ -7,6 +7,7 @@ import jwt
 import datetime
 from functools import wraps
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
+from app import db
 
 
 app = Flask(__name__)
@@ -43,6 +44,31 @@ class Patient(db.Model):
     entered_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
     timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Site(db.Model):
+    __tablename__ = "sites"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.String(255), nullable=True)
+    timestamp_created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+class Study(db.Model):
+    __tablename__ = 'study'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    protocol_number = db.Column(db.String(100))
+    irb_number = db.Column(db.String(100))
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class StudySite(db.Model):
+    __tablename__ = 'study_site'
+    id = db.Column(db.Integer, primary_key=True)
+    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
+    site_id = db.Column(db.Integer, db.ForeignKey('sites.id'), nullable=False)
+    timestamp_created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
 # ✅ Token generator
 def generate_token(user_id):
@@ -101,13 +127,18 @@ def login():
 
 # ✅ Register user
 @app.route("/users", methods=["POST"])
-def create_user():
+@token_required
+def create_user(current_user):
+    if current_user.role != "admin":
+        return jsonify({"success": False, "message": "Access denied"}), 403
+
     data = request.get_json()
     hashed_pw = generate_password_hash(data["password"])
     new_user = Users(username=data["username"], password=hashed_pw, role=data["role"])
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"success": True, "message": "User created successfully."})
+
 
 # ✅ Create patient API (requires token)
 @app.route("/api/patients", methods=["POST"])
@@ -129,7 +160,7 @@ def create_patient(current_user):
         print("Error:", e)
         return jsonify({"success": False, "message": "Error saving patient"}), 500
 
-
+# ✅ Changepassword 
 @app.route('/change-password', methods=['POST'])
 @jwt_required()
 def change_password():
@@ -143,6 +174,117 @@ def change_password():
     user.password = generate_password_hash(data['newPassword'])
     db.session.commit()
     return jsonify({"success": True, "message": "Đổi mật khẩu thành công!"})
+
+@app.route("/api/sites", methods=["GET", "POST"])
+def handle_sites():
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    try:
+        decoded = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+        user = Users.query.get(decoded["user_id"])
+        if user.role != "admin":
+            return jsonify({"message": "Access denied"}), 403
+    except Exception as e:
+        return jsonify({"message": "Invalid token"}), 401
+
+    if request.method == "POST":
+        data = request.get_json()
+        new_site = Site(name=data["name"], address=data["address"])
+        db.session.add(new_site)
+        db.session.commit()
+        return jsonify({"message": "Site created"}), 201
+
+    if request.method == "GET":
+        sites = Site.query.all()
+        return jsonify([{
+            "id": s.id,
+            "name": s.name,
+            "address": s.address,
+            "created": s.timestamp_created.isoformat()
+        } for s in sites])
+
+@app.route("/api/studies", methods=["GET", "POST"])
+@token_required
+def handle_studies(current_user):
+    if current_user.role not in ["admin", "studymanager"]:
+        return jsonify({"message": "Access denied"}), 403
+
+    if request.method == "POST":
+        data = request.get_json()
+        try:
+            new_study = Study(
+                name=data["name"],
+                protocol_number=data.get("protocol_number"),
+                irb_number=data.get("irb_number"),
+                start_date=datetime.datetime.strptime(data.get("start_date"), "%Y-%m-%d") if data.get("start_date") else None,
+                end_date=datetime.datetime.strptime(data.get("end_date"), "%Y-%m-%d") if data.get("end_date") else None
+            )
+            db.session.add(new_study)
+            db.session.commit()
+            return jsonify({"message": "Study created", "id": new_study.id}), 201
+        except Exception as e:
+            print("Error creating study:", e)
+            return jsonify({"message": "Failed to create study"}), 500
+
+    if request.method == "GET":
+        studies = Study.query.order_by(Study.id.desc()).all()
+        return jsonify([
+            {
+                "id": s.id,
+                "name": s.name,
+                "protocol_number": s.protocol_number,
+                "irb_number": s.irb_number,
+                "start_date": s.start_date.isoformat() if s.start_date else None,
+                "end_date": s.end_date.isoformat() if s.end_date else None
+            } for s in studies
+        ])
+
+@app.route("/api/studies/<int:id>", methods=["PUT", "DELETE"])
+@token_required
+def update_delete_study(current_user, id):
+    if current_user.role not in ["admin", "studymanager"]:
+        return jsonify({"message": "Access denied"}), 403
+
+    study = Study.query.get_or_404(id)
+
+    if request.method == "PUT":
+        data = request.get_json()
+        try:
+            study.name = data.get("name", study.name)
+            study.protocol_number = data.get("protocol_number", study.protocol_number)
+            study.irb_number = data.get("irb_number", study.irb_number)
+            study.start_date = datetime.datetime.strptime(data.get("start_date"), "%Y-%m-%d") if data.get("start_date") else study.start_date
+            study.end_date = datetime.datetime.strptime(data.get("end_date"), "%Y-%m-%d") if data.get("end_date") else study.end_date
+            db.session.commit()
+            return jsonify({"message": "Study updated successfully"})
+        except Exception as e:
+            print("Error updating study:", e)
+            return jsonify({"message": "Failed to update study"}), 500
+
+    if request.method == "DELETE":
+        try:
+            db.session.delete(study)
+            db.session.commit()
+            return jsonify({"message": "Study deleted"})
+        except Exception as e:
+            print("Error deleting study:", e)
+            return jsonify({"message": "Failed to delete study"}), 500
+
+@app.route("/api/study-site", methods=["POST"])
+@token_required
+def link_study_site(current_user):
+    if current_user.role not in ["admin", "studymanager"]:
+        return jsonify({"message": "Access denied"}), 403
+
+    data = request.get_json()
+    try:
+        new_link = StudySite(study_id=data["study_id"], site_id=data["site_id"])
+        db.session.add(new_link)
+        db.session.commit()
+        return jsonify({"message": "Study linked to site"}), 201
+    except Exception as e:
+        print("Error linking study and site:", e)
+        return jsonify({"message": "Link failed"}), 500
+
 
 # ✅ Create all tables (local only)
 if __name__ == "__main__":
