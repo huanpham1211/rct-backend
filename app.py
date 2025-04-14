@@ -10,7 +10,7 @@ from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 
 
 app = Flask(__name__)
-CORS(app, origins=["https://rctmanager.com"])
+CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
 
 # 🔐 SECRET KEY from environment
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
@@ -41,8 +41,8 @@ class Patient(db.Model):
     dob = db.Column(db.Date, nullable=False)
     sex = db.Column(db.String(10), nullable=False)
     entered_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-    timestamp_created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    timestamp_updated = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 # ✅ Token generator
 def generate_token(user_id):
@@ -51,7 +51,7 @@ def generate_token(user_id):
         'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
-
+    
 # ✅ Token decoder decorator
 def token_required(f):
     @wraps(f)
@@ -73,6 +73,17 @@ def token_required(f):
 
         return f(current_user, *args, **kwargs)
     return decorated
+
+@app.before_request
+def handle_options_request():
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        headers = response.headers
+
+        # Allow specific headers and methods
+        headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        return response
 
 # ✅ Login
 @app.route("/login", methods=["POST"])
