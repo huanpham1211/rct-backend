@@ -175,22 +175,16 @@ def change_password():
     return jsonify({"success": True, "message": "Đổi mật khẩu thành công!"})
 
 @app.route("/api/sites", methods=["GET", "POST"])
-def handle_sites():
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    try:
-        decoded = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
-        user = Users.query.get(decoded["user_id"])
-        if user.role != "admin":
-            return jsonify({"message": "Access denied"}), 403
-    except Exception as e:
-        return jsonify({"message": "Invalid token"}), 401
+@token_required
+def handle_sites(current_user):
+    if current_user.role != "admin":
+        return jsonify({"message": "Access denied"}), 403
 
     if request.method == "POST":
         data = request.get_json()
         if not data.get("name") or not data.get("address"):
             return jsonify({"message": "Name and address are required"}), 400
 
-        # Check for duplicate site name
         existing_site = Site.query.filter_by(name=data["name"]).first()
         if existing_site:
             return jsonify({"message": "Site with this name already exists"}), 400
@@ -205,13 +199,18 @@ def handle_sites():
             return jsonify({"message": "Failed to create site"}), 500
 
     if request.method == "GET":
-        sites = Site.query.all()
-        return jsonify([{
-            "id": s.id,
-            "name": s.name,
-            "address": s.address,
-            "created": s.timestamp_created.isoformat()
-        } for s in sites])
+        try:
+            sites = Site.query.all()
+            return jsonify([{
+                "id": s.id,
+                "name": s.name,
+                "address": s.address,
+                "created": s.timestamp_created.isoformat()
+            } for s in sites])
+        except Exception as e:
+            print("Error fetching sites:", e)
+            return jsonify({"message": "Failed to fetch sites"}), 500
+
 
 @app.route("/api/sites/<int:site_id>", methods=["PUT"])
 def update_site(site_id):
