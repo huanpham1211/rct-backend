@@ -187,6 +187,8 @@ def handle_sites():
 
     if request.method == "POST":
         data = request.get_json()
+        if not data.get("name") or not data.get("address"):
+            return jsonify({"message": "Name and address are required"}), 400
         new_site = Site(name=data["name"], address=data["address"])
         db.session.add(new_site)
         db.session.commit()
@@ -200,6 +202,30 @@ def handle_sites():
             "address": s.address,
             "created": s.timestamp_created.isoformat()
         } for s in sites])
+
+@app.route("/api/sites/<int:site_id>", methods=["PUT"])
+def update_site(site_id):
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    try:
+        decoded = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+        user = Users.query.get(decoded["user_id"])
+        if user.role != "admin":
+            return jsonify({"message": "Access denied"}), 403
+    except Exception as e:
+        return jsonify({"message": "Invalid token"}), 401
+
+    data = request.get_json()
+    if not data.get("name") or not data.get("address"):
+        return jsonify({"message": "Name and address are required"}), 400
+
+    site = Site.query.get(site_id)
+    if not site:
+        return jsonify({"message": "Site not found"}), 404
+
+    site.name = data["name"]
+    site.address = data["address"]
+    db.session.commit()
+    return jsonify({"message": "Site updated"}), 200
 
 @app.route("/api/studies", methods=["GET", "POST"])
 @token_required
