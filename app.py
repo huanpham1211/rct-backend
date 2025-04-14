@@ -4,7 +4,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import jwt
-import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 
@@ -49,7 +49,7 @@ class Site(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     address = db.Column(db.String(255), nullable=True)
-    timestamp_created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Study(db.Model):
     __tablename__ = 'study'
@@ -67,13 +67,13 @@ class StudySite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
     site_id = db.Column(db.Integer, db.ForeignKey('sites.id'), nullable=False)
-    timestamp_created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ✅ Token generator
 def generate_token(user_id):
     payload = {
         'user_id': user_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+        'exp': datetime.utcnow() + timedelta(hours=2)
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     
@@ -214,8 +214,8 @@ def handle_studies(current_user):
                 name=data["name"],
                 protocol_number=data.get("protocol_number"),
                 irb_number=data.get("irb_number"),
-                start_date=datetime.datetime.strptime(data.get("start_date"), "%Y-%m-%d") if data.get("start_date") else None,
-                end_date=datetime.datetime.strptime(data.get("end_date"), "%Y-%m-%d") if data.get("end_date") else None
+                start_date=datetime.strptime(data.get("start_date"), "%Y-%m-%d") if data.get("start_date") else None,
+                end_date=datetime.strptime(data.get("end_date"), "%Y-%m-%d") if data.get("end_date") else None
             )
             db.session.add(new_study)
             db.session.commit()
