@@ -104,7 +104,7 @@ def login():
     user = Users.query.filter_by(username=data["username"]).first()
     if user and check_password_hash(user.password, data["password"]):
         access_token = create_access_token(identity=str(user.id))  # ✅ Use flask_jwt_extended
-        return jsonify({"success": True, "role": user.role, "token": token})
+        return jsonify({"success": True, "role": user.role, "token": access_token})
     return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
 @app.route("/users", methods=["POST"])
