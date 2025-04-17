@@ -15,7 +15,12 @@ CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
 
 # 🔐 SECRET KEY from environment
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
+app.config["JWT_SECRET_KEY"] = app.config["SECRET_KEY"]
+app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+app.config["JWT_HEADER_NAME"] = "Authorization"
+app.config["JWT_HEADER_TYPE"] = "Bearer"
 
+jwt = JWTManager(app)
 # ✅ PostgreSQL or SQLite fallback
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///local.db").replace("postgres://", "postgresql://")
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
