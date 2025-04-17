@@ -240,6 +240,24 @@ def update_site(site_id):
     site.location = data["location"]
     db.session.commit()
     return jsonify({"message": "Site updated"}), 200
+@app.route("/api/sites/<int:site_id>", methods=["DELETE"])
+@token_required
+def delete_site(current_user, site_id):
+    if current_user.role != "admin":
+        return jsonify({"message": "Access denied"}), 403
+
+    site = Site.query.get(site_id)
+    if not site:
+        return jsonify({"message": "Site not found"}), 404
+
+    # Check for existing linkage (like study_site)
+    linked = StudySite.query.filter_by(site_id=site_id).first()
+    if linked:
+        return jsonify({"message": "Cannot delete: Site is linked to a study."}), 400
+
+    db.session.delete(site)
+    db.session.commit()
+    return jsonify({"message": "Site deleted"}), 200
 
 @app.route("/api/studies", methods=["GET", "POST"])
 @token_required
