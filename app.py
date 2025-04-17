@@ -248,16 +248,17 @@ def delete_site(current_user, site_id):
 
     site = Site.query.get(site_id)
     if not site:
-        return jsonify({"message": "Site not found"}), 404
+        return jsonify({"message": "Không tìm thấy cơ sở"}), 404
 
-    # Check for existing linkage (like study_site)
+    # Check for linkage to studies
     linked = StudySite.query.filter_by(site_id=site_id).first()
     if linked:
-        return jsonify({"message": "Cannot delete: Site is linked to a study."}), 400
-
+        return jsonify({"message": "Không thể xoá: Cơ sở đã thực hiện nghiên cứu."}), 400
+        
     db.session.delete(site)
     db.session.commit()
     return jsonify({"message": "Site deleted"}), 200
+
 
 @app.route("/api/studies", methods=["GET", "POST"])
 @token_required
