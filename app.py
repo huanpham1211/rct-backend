@@ -166,19 +166,36 @@ def create_patient(current_user):
 @app.route('/change-password', methods=['POST'])
 @jwt_required()
 def change_password():
-    user_id = get_jwt_identity()
-    data = request.get_json()
+    try:
+        user_id = get_jwt_identity()
+        if not user_id:
+            return jsonify({"success": False, "message": "Không có thông tin người dùng"}), 401
 
-    user = Users.query.get(user_id)
-    if not user:
-        return jsonify({"success": False, "message": "Không tìm thấy người dùng"}), 404
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "message": "Thiếu dữ liệu"}), 400
 
-    if not check_password_hash(user.password, data['oldPassword']):
-        return jsonify({"success": False, "message": "Mật khẩu cũ không đúng"}), 400
+        old_pw = data.get('oldPassword')
+        new_pw = data.get('newPassword')
 
-    user.password = generate_password_hash(data['newPassword'])
-    db.session.commit()
-    return jsonify({"success": True, "message": "Đổi mật khẩu thành công!"})
+        if not old_pw or not new_pw:
+            return jsonify({"success": False, "message": "Vui lòng nhập đầy đủ thông tin"}), 400
+
+        user = Users.query.get(user_id)
+        if not user:
+            return jsonify({"success": False, "message": "Không tìm thấy người dùng"}), 404
+
+        if not check_password_hash(user.password, old_pw):
+            return jsonify({"success": False, "message": "Mật khẩu cũ không đúng"}), 400
+
+        user.password = generate_password_hash(new_pw)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Đổi mật khẩu thành công!"})
+    
+    except Exception as e:
+        print("🔴 Error in change-password:", e)
+        return jsonify({"success": False, "message": "Lỗi máy chủ"}), 500
+
 
 
 @app.route("/api/sites", methods=["GET", "POST"])
