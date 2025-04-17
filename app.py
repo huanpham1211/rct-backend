@@ -229,15 +229,15 @@ def update_site(site_id):
         return jsonify({"message": "Invalid token"}), 401
 
     data = request.get_json()
-    if not data.get("name") or not data.get("address"):
-        return jsonify({"message": "Name and address are required"}), 400
+    if not data.get("name") or not data.get("location"):
+        return jsonify({"message": "Name and location are required"}), 400
 
     site = Site.query.get(site_id)
     if not site:
         return jsonify({"message": "Site not found"}), 404
 
     site.name = data["name"]
-    site.address = data["address"]
+    site.location = data["location"]
     db.session.commit()
     return jsonify({"message": "Site updated"}), 200
 
