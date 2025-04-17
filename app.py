@@ -110,7 +110,8 @@ def login():
 @app.route("/users", methods=["POST"])
 @jwt_required()
 def create_user():
-    current_user = Users.query.get(get_jwt_identity())
+    user_id = get_jwt_identity()
+    current_user = Users.query.get(user_id)
     if current_user.role != "admin":
         return jsonify({"success": False, "message": "Access denied"}), 403
     data = request.get_json()
@@ -140,8 +141,8 @@ def change_password():
 @app.route("/api/sites", methods=["GET", "POST"])
 @jwt_required()
 def handle_sites():
-    current_user = Users.query.get(get_jwt_identity())
-
+    user_id = get_jwt_identity()
+    current_user = Users.query.get(user_id)
     if current_user.role != "admin":
         return jsonify({"message": "Access denied"}), 403
 
@@ -169,7 +170,8 @@ def handle_sites():
 @app.route("/api/sites/<int:site_id>", methods=["PUT", "DELETE"])
 @jwt_required()
 def modify_site(site_id):
-    current_user = Users.query.get(get_jwt_identity())
+    user_id = get_jwt_identity()
+    current_user = Users.query.get(user_id)
     if current_user.role != "admin":
         return jsonify({"message": "Access denied"}), 403
 
