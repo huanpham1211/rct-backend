@@ -168,7 +168,10 @@ def create_patient(current_user):
 def change_password():
     user_id = get_jwt_identity()
     data = request.get_json()
+
     user = Users.query.get(user_id)
+    if not user:
+        return jsonify({"success": False, "message": "Không tìm thấy người dùng"}), 404
 
     if not check_password_hash(user.password, data['oldPassword']):
         return jsonify({"success": False, "message": "Mật khẩu cũ không đúng"}), 400
@@ -176,6 +179,7 @@ def change_password():
     user.password = generate_password_hash(data['newPassword'])
     db.session.commit()
     return jsonify({"success": True, "message": "Đổi mật khẩu thành công!"})
+
 
 @app.route("/api/sites", methods=["GET", "POST"])
 @token_required
