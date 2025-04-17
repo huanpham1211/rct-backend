@@ -141,6 +141,7 @@ def change_password():
 @jwt_required()
 def handle_sites():
     current_user = Users.query.get(get_jwt_identity())
+
     if current_user.role != "admin":
         return jsonify({"message": "Access denied"}), 403
 
@@ -150,7 +151,8 @@ def handle_sites():
             return jsonify({"message": "Name and location are required"}), 400
         if Site.query.filter_by(name=data["name"]).first():
             return jsonify({"message": "Site with this name already exists"}), 400
-        site = Site(name=data["name"], location=data["location"])
+
+        site = Site(name=data["name"], location=data["location"], timestamp_created=datetime.utcnow())
         db.session.add(site)
         db.session.commit()
         return jsonify({"message": "Site created"}), 201
@@ -184,9 +186,11 @@ def modify_site(site_id):
 
     if StudySite.query.filter_by(site_id=site_id).first():
         return jsonify({"message": "Cannot delete: Site linked to study"}), 400
+
     db.session.delete(site)
     db.session.commit()
     return jsonify({"message": "Site deleted"}), 200
+
 
 # Initialize tables
 if __name__ == "__main__":
