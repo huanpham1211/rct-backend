@@ -6,7 +6,7 @@ import os
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
-from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
 from traceback import format_exc  # Add this at the top if not already
 
 
@@ -123,13 +123,15 @@ def handle_options_request():
 def login():
     data = request.get_json()
     user = Users.query.filter_by(username=data["username"]).first()
+
     if user and check_password_hash(user.password, data["password"]):
-        token = generate_token(user.id)
+        access_token = create_access_token(identity=user.id)
         return jsonify({
             "success": True,
             "role": user.role,
-            "token": token
+            "token": access_token
         })
+
     return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
 # ✅ Register user
