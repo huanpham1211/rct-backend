@@ -148,10 +148,11 @@ def get_users():
         {
             "id": user.id,
             "username": user.username,
-            "roles": user.roles.split(",") if user.roles else []
+            "role": user.role  # or user.roles if you're using multiple
         }
         for user in users
     ]), 200
+
 
 # Reset password
 @users_bp.route('/users/<int:user_id>/reset-password', methods=['POST'])
