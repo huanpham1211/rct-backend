@@ -107,6 +107,7 @@ def login():
         return jsonify({"success": True, "role": user.role, "token": access_token})
     return jsonify({"success": False, "message": "Invalid credentials"}), 401
 
+#user
 @app.route("/users", methods=["POST"])
 @jwt_required()
 def create_user():
@@ -137,7 +138,40 @@ def change_password():
     user.password = generate_password_hash(new_pw)
     db.session.commit()
     return jsonify({"success": True, "message": "Password updated successfully"})
+    
+users_bp = Blueprint('users', __name__)
+@users_bp.route('/users', methods=['GET'])
+@jwt_required()
+def get_users():
+    users = User.query.all()
+    return jsonify([
+        {
+            "id": user.id,
+            "username": user.username,
+            "roles": user.roles.split(",") if user.roles else []
+        }
+        for user in users
+    ]), 200
 
+# Reset password
+@users_bp.route('/users/<int:user_id>/reset-password', methods=['POST'])
+@jwt_required()
+def reset_password(user_id):
+    data = request.get_json()
+    new_password = data.get('password')
+    if not new_password:
+        return jsonify({"message": "Password is required"}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    user.set_password(new_password)  # Assumes set_password hashes it
+    db.session.commit()
+    return jsonify({"message": "Password updated"}), 200
+
+
+#sites
 @app.route("/api/sites", methods=["GET", "POST"])
 @jwt_required()
 def handle_sites():
