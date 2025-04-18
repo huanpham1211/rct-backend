@@ -143,7 +143,7 @@ users_bp = Blueprint('users', __name__)
 @users_bp.route('/users', methods=['GET'])
 @jwt_required()
 def get_users():
-    users = User.query.all()
+    users = Users.query.all()
     return jsonify([
         {
             "id": user.id,
