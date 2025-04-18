@@ -170,6 +170,22 @@ def reset_password(user_id):
     db.session.commit()
     return jsonify({"message": "Password updated"}), 200
 
+@users_bp.route('/users/<int:user_id>/update-role', methods=['POST'])
+@jwt_required()
+def update_role(user_id):
+    data = request.get_json()
+    new_role = data.get('role')
+
+    if not new_role:
+        return jsonify({"message": "Role is required"}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    user.role = new_role
+    db.session.commit()
+    return jsonify({"message": "Role updated"}), 200
 
 #sites
 @app.route("/api/sites", methods=["GET", "POST"])
