@@ -40,17 +40,21 @@ class Study(db.Model):
     irb_number = db.Column(db.String(100))
     start_date = db.Column(db.Date)
     end_date = db.Column(db.Date)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
     timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 
 class StudySite(db.Model):
     __tablename__ = 'study_site'
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
-    timestamp_updated = db.Column(db.DateTime, onupdate=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 
 
 # (include Patient, Site, Study, etc. if needed)
