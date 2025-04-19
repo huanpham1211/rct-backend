@@ -9,7 +9,8 @@ from flask_jwt_extended import (
 )
 import os
 from models import db, Users, Site, StudySite  # ✅ instead of from app
-from routes.users import users_bp, sites_bp  # ✅ no circular import now
+from routes.users import users_bp
+from routes.sites import sites_bp
 
 # App setup
 app = Flask(__name__)
