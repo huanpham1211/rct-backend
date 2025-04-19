@@ -10,7 +10,8 @@ from flask_jwt_extended import (
 )
 import os
 from routes.users import users_bp  # assuming you save it as routes/users.py
-
+from models import db, Users
+db.init_app(app)
 # App setup
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
