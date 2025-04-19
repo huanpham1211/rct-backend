@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
@@ -11,11 +10,8 @@ from flask_jwt_extended import (
 import os
 from routes.users import users_bp  # assuming you save it as routes/users.py
 from models import db, Users
-db.init_app(app)
 # App setup
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
-app.register_blueprint(users_bp)
 
 # JWT & DB Configuration
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
@@ -28,8 +24,13 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=2)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///local.db").replace("postgres://", "postgresql://")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# Init extensions
+db.init_app(app)
 jwt = JWTManager(app)
-db = SQLAlchemy(app)
+CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
+
+# Register blueprints
+app.register_blueprint(users_bp)
 
 # Database Models
 
