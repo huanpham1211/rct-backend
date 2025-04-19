@@ -8,8 +8,9 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 import os
-from routes.users import users_bp  # assuming you save it as routes/users.py
-from models import db, Users
+from models import db, Users  # ✅ instead of from app
+from routes.users import users_bp  # ✅ no circular import now
+
 # App setup
 app = Flask(__name__)
 
