@@ -13,6 +13,7 @@ import os
 # App setup
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
+users_bp = Blueprint('users', __name__, url_prefix='/api/users')
 
 # JWT & DB Configuration
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
@@ -139,54 +140,84 @@ def change_password():
     db.session.commit()
     return jsonify({"success": True, "message": "Password updated successfully"})
     
-users_bp = Blueprint('users', __name__)
-@users_bp.route('/users', methods=['GET'])
+# GET: List all users (admin only)
+@users_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_users():
+    current_user = Users.query.get(get_jwt_identity())
+    if current_user.role != "admin":
+        return jsonify({"message": "Access denied"}), 403
+
     users = Users.query.all()
     return jsonify([
         {
             "id": user.id,
             "username": user.username,
-            "role": user.role  # or user.roles if you're using multiple
-        }
-        for user in users
+            "role": user.role
+        } for user in users
     ]), 200
 
+# POST: Create user (admin only)
+@users_bp.route('/', methods=['POST'])
+@jwt_required()
+def create_user():
+    current_user = Users.query.get(get_jwt_identity())
+    if current_user.role != "admin":
+        return jsonify({"message": "Access denied"}), 403
 
-# Reset password
-@users_bp.route('/users/<int:user_id>/reset-password', methods=['POST'])
+    data = request.get_json()
+    hashed_pw = generate_password_hash(data["password"])
+    new_user = Users(
+        username=data["username"],
+        password=hashed_pw,
+        role=data["role"]
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "User created successfully."}), 201
+
+# POST: Reset password
+@users_bp.route('/<int:user_id>/reset-password', methods=['POST'])
 @jwt_required()
 def reset_password(user_id):
+    current_user = Users.query.get(get_jwt_identity())
+    if current_user.role != "admin":
+        return jsonify({"message": "Access denied"}), 403
+
     data = request.get_json()
     new_password = data.get('password')
     if not new_password:
         return jsonify({"message": "Password is required"}), 400
 
-    user = User.query.get(user_id)
+    user = Users.query.get(user_id)
     if not user:
         return jsonify({"message": "User not found"}), 404
 
-    user.set_password(new_password)  # Assumes set_password hashes it
+    user.password = generate_password_hash(new_password)
     db.session.commit()
     return jsonify({"message": "Password updated"}), 200
 
-@users_bp.route('/users/<int:user_id>/update-role', methods=['POST'])
+# POST: Update user role
+@users_bp.route('/<int:user_id>/update-role', methods=['POST'])
 @jwt_required()
 def update_role(user_id):
+    current_user = Users.query.get(get_jwt_identity())
+    if current_user.role != "admin":
+        return jsonify({"message": "Access denied"}), 403
+
     data = request.get_json()
     new_role = data.get('role')
-
     if not new_role:
         return jsonify({"message": "Role is required"}), 400
 
-    user = User.query.get(user_id)
+    user = Users.query.get(user_id)
     if not user:
         return jsonify({"message": "User not found"}), 404
 
     user.role = new_role
     db.session.commit()
     return jsonify({"message": "Role updated"}), 200
+
 
 #sites
 @app.route("/api/sites", methods=["GET", "POST"])
