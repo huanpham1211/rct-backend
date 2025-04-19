@@ -11,6 +11,7 @@ import os
 from models import db, Users, Site, StudySite  # ✅ instead of from app
 from routes.users import users_bp
 from routes.sites import sites_bp
+from routes.studies import studies_bp
 
 # App setup
 app = Flask(__name__)
@@ -34,6 +35,7 @@ CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
 # Register blueprints
 app.register_blueprint(users_bp)
 app.register_blueprint(sites_bp)
+app.register_blueprint(studies_bp)
 
 # Database Models
 
