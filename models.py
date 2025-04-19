@@ -49,6 +49,8 @@ class StudySite(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'), nullable=False)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp_updated = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 
 # (include Patient, Site, Study, etc. if needed)
