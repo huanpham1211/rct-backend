@@ -15,7 +15,6 @@ from routes.users import users_bp  # assuming you save it as routes/users.py
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
 app.register_blueprint(users_bp)
-users_bp = Blueprint('users', __name__, url_prefix='/api/users')
 
 # JWT & DB Configuration
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
