@@ -61,3 +61,12 @@ class StudySite(db.Model):
     site = db.relationship('Site', backref='study_sites')
 
 # (include Patient, Site, Study, etc. if needed)
+
+class StudyUser(db.Model):
+    __tablename__ = 'study_users'
+    id = db.Column(db.Integer, primary_key=True)
+    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
+
