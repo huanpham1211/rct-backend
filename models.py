@@ -45,7 +45,9 @@ class Study(db.Model):
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
     timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-
+    # ➕ Relationship to StudySite
+    study_sites = db.relationship('StudySite', backref='study', lazy=True)
+    
 class StudySite(db.Model):
     __tablename__ = 'study_site'
     id = db.Column(db.Integer, primary_key=True)
@@ -55,6 +57,7 @@ class StudySite(db.Model):
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
     timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-
+    # ➕ Relationship to Site
+    site = db.relationship('Site', backref='study_sites')
 
 # (include Patient, Site, Study, etc. if needed)
