@@ -150,13 +150,23 @@ def assign_study_site():
 @jwt_required()
 def unassign_study_site():
     user_id = get_jwt_identity()
+    current_user = Users.query.get(user_id)
     data = request.get_json()
-    
+
+    study = Study.query.get(data['study_id'])
+    if not study:
+        return jsonify({"message": "Study not found"}), 404
+
+    if current_user.role != 'admin' and study.created_by != user_id:
+        return jsonify({"message": "Access denied"}), 403
+
     study_site = StudySite.query.filter_by(study_id=data['study_id'], site_id=data['site_id']).first()
     if not study_site:
-        return jsonify({"message": "Assignment not found"}), 404
+        return jsonify({"message": "Site not assigned to study"}), 404
 
     db.session.delete(study_site)
     db.session.commit()
-    return jsonify({"message": "Site unassigned successfully"}), 200
+
+    return jsonify({"message": "Site unassigned from study"}), 200
+
 
