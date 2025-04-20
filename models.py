@@ -39,7 +39,7 @@ class Study(db.Model):
     protocol_number = db.Column(db.String(100))
     irb_number = db.Column(db.String(100))
     start_date = db.Column(db.Date)
-    end_date = db.Column(db.Date)
+    end_date = db.Column(db.Date, nullable=True)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
