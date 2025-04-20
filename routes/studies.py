@@ -145,3 +145,18 @@ def assign_study_site():
     db.session.add(assignment)
     db.session.commit()
     return jsonify({"message": "Site assigned to study"}), 201
+
+@studies_bp.route('/unassign', methods=['POST'])
+@jwt_required()
+def unassign_study_site():
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    
+    study_site = StudySite.query.filter_by(study_id=data['study_id'], site_id=data['site_id']).first()
+    if not study_site:
+        return jsonify({"message": "Assignment not found"}), 404
+
+    db.session.delete(study_site)
+    db.session.commit()
+    return jsonify({"message": "Site unassigned successfully"}), 200
+
