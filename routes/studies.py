@@ -11,19 +11,22 @@ studies_bp = Blueprint("studies", __name__, url_prefix="/api/studies")
 def handle_studies():
     user_id = get_jwt_identity()
     current_user = Users.query.get(user_id)
-    end_date_str = data.get('end_date')
-    end_date = parse(end_date_str).date() if end_date_str else None
 
     if request.method == 'POST':
         if current_user.role not in ['admin', 'studymanager']:
             return jsonify({"message": "Permission denied"}), 403
         try:
             data = request.get_json()
+            end_date_str = data.get('end_date')
+            end_date = parse(end_date_str).date() if end_date_str else None
+            start_date_str = data.get('start_date')
+            start_date = parse(start_date_str).date() if start_date_str else None
+
             new_study = Study(
                 name=data['name'],
                 protocol_number=data.get('protocol_number'),
                 irb_number=data.get('irb_number'),
-                start_date=data.get('start_date'),
+                start_date=start_date,
                 end_date=end_date,
                 created_by=user_id,
                 timestamp_created=datetime.utcnow(),
@@ -35,6 +38,7 @@ def handle_studies():
         except Exception as e:
             return jsonify({"message": "Error creating study", "error": str(e)}), 500
 
+    # GET request logic
     try:
         search = request.args.get('search', '', type=str)
         page = request.args.get('page', 1, type=int)
@@ -71,7 +75,6 @@ def handle_studies():
                 ]
             })
 
-
         return jsonify({
             "studies": result,
             "total": studies.total,
@@ -97,11 +100,14 @@ def update_study(study_id):
 
     try:
         data = request.get_json()
+        end_date_str = data.get('end_date')
+        start_date_str = data.get('start_date')
+
         study.name = data.get('name', study.name)
         study.protocol_number = data.get('protocol_number', study.protocol_number)
         study.irb_number = data.get('irb_number', study.irb_number)
-        study.start_date = data.get('start_date', study.start_date)
-        study.end_date = data.get('end_date', study.end_date)
+        study.start_date = parse(start_date_str).date() if start_date_str else study.start_date
+        study.end_date = parse(end_date_str).date() if end_date_str else None
         study.timestamp_updated = datetime.utcnow()
         study.updated_by = user_id
 
@@ -125,7 +131,6 @@ def assign_study_site():
     if current_user.role != 'admin' and study.created_by != user_id:
         return jsonify({"message": "Access denied"}), 403
 
-    # Check for duplicate
     existing = StudySite.query.filter_by(study_id=data['study_id'], site_id=data['site_id']).first()
     if existing:
         return jsonify({"message": "Site already assigned"}), 400
