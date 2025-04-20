@@ -169,4 +169,24 @@ def unassign_study_site():
 
     return jsonify({"message": "Site unassigned from study"}), 200
 
+@studies_bp.route('/assign-user', methods=['POST'])
+@jwt_required()
+def assign_user_to_study():
+    data = request.get_json()
+    user_id = get_jwt_identity()
+    study_id = data.get('study_id')
+    target_user_id = data.get('user_id')
+
+    existing = StudyUser.query.filter_by(study_id=study_id, user_id=target_user_id).first()
+    if existing:
+        return jsonify({"message": "User already assigned"}), 400
+
+    link = StudyUser(
+        study_id=study_id,
+        user_id=target_user_id,
+        created_by=user_id
+    )
+    db.session.add(link)
+    db.session.commit()
+    return jsonify({"message": "User assigned to study"}), 201
 
