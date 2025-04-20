@@ -10,6 +10,9 @@ class Users(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    title = db.Column(db.String(100))
 
 class Patient(db.Model):
     __tablename__ = "patient"
