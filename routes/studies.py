@@ -60,8 +60,17 @@ def handle_studies():
                 "start_date": s.start_date.isoformat() if s.start_date else None,
                 "end_date": s.end_date.isoformat() if s.end_date else None,
                 "created_by": s.created_by,
-                "updated_by": s.updated_by
+                "updated_by": s.updated_by,
+                "sites": [
+                    {
+                        "id": ss.site.id,
+                        "name": ss.site.name,
+                        "location": ss.site.location
+                    }
+                    for ss in s.study_sites
+                ]
             })
+
 
         return jsonify({
             "studies": result,
