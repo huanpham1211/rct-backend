@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Study, StudySite, Users
+from models import db, Study, StudySite, Users, StudyUser 
 from datetime import datetime
 from dateutil.parser import parse
 
