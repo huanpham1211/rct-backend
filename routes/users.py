@@ -117,3 +117,19 @@ def update_user_profile(user_id):
     db.session.commit()
     return jsonify({'message': 'Profile updated successfully'}), 200
 
+@users_bp.route('/<int:user_id>', methods=['GET'])
+@jwt_required()
+def get_user_by_id(user_id):
+    user = Users.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    return jsonify({
+        'id': user.id,
+        'username': user.username,
+        'role': user.role,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'title': user.title
+    }), 200
+
