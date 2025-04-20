@@ -50,7 +50,11 @@ class Study(db.Model):
 
     # ➕ Relationship to StudySite
     study_sites = db.relationship('StudySite', backref='study', lazy='joined')
-    
+    users = db.relationship(
+        'Users',
+        secondary='study_users',
+        backref='assigned_studies'
+    )
 class StudySite(db.Model):
     __tablename__ = 'study_site'
     id = db.Column(db.Integer, primary_key=True)
