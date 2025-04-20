@@ -83,3 +83,19 @@ def update_role(user_id):
     db.session.commit()
     return jsonify({"message": "Role updated"}), 200
 
+# routes/users.py or wherever user routes are handled
+@users_bp.route('/<int:user_id>/update-info', methods=['POST'])
+@jwt_required()
+def update_user_info(user_id):
+    current_user = get_jwt_identity()
+    user = Users.query.get(user_id)
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.get_json()
+    user.first_name = data.get('first_name', user.first_name)
+    user.last_name = data.get('last_name', user.last_name)
+    user.title = data.get('title', user.title)
+
+    db.session.commit()
+    return jsonify({"message": "User info updated successfully"}), 200
