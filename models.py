@@ -53,8 +53,12 @@ class Study(db.Model):
     users = db.relationship(
         'Users',
         secondary='study_users',
-        backref='assigned_studies'
+        primaryjoin='Study.id == StudyUser.study_id',
+        secondaryjoin='Users.id == StudyUser.user_id',
+        backref='assigned_studies',
+        foreign_keys='[StudyUser.study_id, StudyUser.user_id]'
     )
+
 class StudySite(db.Model):
     __tablename__ = 'study_site'
     id = db.Column(db.Integer, primary_key=True)
