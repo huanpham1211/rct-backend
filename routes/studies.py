@@ -190,3 +190,17 @@ def assign_user_to_study():
     db.session.commit()
     return jsonify({"message": "User assigned to study"}), 201
 
+@studies_bp.route('/unassign-user', methods=['POST'])
+@jwt_required()
+def unassign_user_from_study():
+    data = request.get_json()
+    study_id = data.get('study_id')
+    target_user_id = data.get('user_id')
+
+    link = StudyUser.query.filter_by(study_id=study_id, user_id=target_user_id).first()
+    if not link:
+        return jsonify({"error": "User is not assigned to this study"}), 404
+
+    db.session.delete(link)
+    db.session.commit()
+    return jsonify({"message": "User unassigned from study"}), 200
