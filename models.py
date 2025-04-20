@@ -46,7 +46,7 @@ class Study(db.Model):
     timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # ➕ Relationship to StudySite
-    study_sites = db.relationship('StudySite', backref='study', lazy=True)
+    study_sites = db.relationship('StudySite', backref='study', lazy='joined')
     
 class StudySite(db.Model):
     __tablename__ = 'study_site'
