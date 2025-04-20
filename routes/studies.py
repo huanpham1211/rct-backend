@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Study, StudySite, Users
 from datetime import datetime
+from dateutil.parser import parse
 
 studies_bp = Blueprint("studies", __name__, url_prefix="/api/studies")
 
@@ -10,6 +11,8 @@ studies_bp = Blueprint("studies", __name__, url_prefix="/api/studies")
 def handle_studies():
     user_id = get_jwt_identity()
     current_user = Users.query.get(user_id)
+    end_date_str = data.get('end_date')
+    end_date = parse(end_date_str).date() if end_date_str else None
 
     if request.method == 'POST':
         if current_user.role not in ['admin', 'studymanager']:
@@ -21,7 +24,7 @@ def handle_studies():
                 protocol_number=data.get('protocol_number'),
                 irb_number=data.get('irb_number'),
                 start_date=data.get('start_date'),
-                end_date=data.get('end_date'),
+                end_date=end_date,
                 created_by=user_id,
                 timestamp_created=datetime.utcnow(),
                 timestamp_updated=datetime.utcnow()
