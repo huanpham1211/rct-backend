@@ -72,6 +72,17 @@ def handle_studies():
                         "location": ss.site.location
                     }
                     for ss in s.study_sites
+                ],
+                "users": [
+                    {
+                        "id": u.id,
+                        "username": u.username,
+                        "first_name": u.first_name,
+                        "last_name": u.last_name,
+                        "title": u.title,
+                        "role": u.role
+                    }
+                    for u in s.users
                 ]
             })
 
@@ -204,3 +215,5 @@ def unassign_user_from_study():
     db.session.delete(link)
     db.session.commit()
     return jsonify({"message": "User unassigned from study"}), 200
+
+
