@@ -216,4 +216,40 @@ def unassign_user_from_study():
     db.session.commit()
     return jsonify({"message": "User unassigned from study"}), 200
 
+@studies_bp.route('/assigned-studies', methods=['GET'])
+@jwt_required()
+def get_assigned_studies():
+    from datetime import date
+
+    user_id = get_jwt_identity()
+    user = Users.query.get(user_id)
+
+    today = date.today()
+
+    if user.role == 'admin':
+        query = Study.query
+    else:
+        query = Study.query.join(StudyUser).filter(StudyUser.user_id == user_id)
+
+    query = query.filter((Study.end_date == None) | (Study.end_date >= today))
+
+    studies = query.all()
+
+    results = []
+    for s in studies:
+        results.append({
+            "id": s.id,
+            "name": s.name,
+            "protocol_number": s.protocol_number,
+            "end_date": s.end_date.isoformat() if s.end_date else None,
+            "sites": [
+                {
+                    "id": ss.site.id,
+                    "name": ss.site.name
+                }
+                for ss in s.study_sites
+            ]
+        })
+
+    return jsonify(results)
 
