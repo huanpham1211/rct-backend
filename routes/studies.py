@@ -66,13 +66,16 @@ def handle_studies():
                 "end_date": s.end_date.isoformat() if s.end_date else None,
                 "created_by": s.created_by,
                 "updated_by": s.updated_by,
+                "is_randomized": s.is_randomized,
+                "randomization_type": s.randomization_type,
+                "block_size": s.block_size,
+                "stratification_factors": s.stratification_factors,
                 "sites": [
                     {
                         "id": ss.site.id,
                         "name": ss.site.name,
                         "location": ss.site.location
-                    }
-                    for ss in s.study_sites
+                    } for ss in s.study_sites
                 ],
                 "users": [
                     {
@@ -82,10 +85,10 @@ def handle_studies():
                         "last_name": u.last_name,
                         "title": u.title,
                         "role": u.role
-                    }
-                    for u in s.users
+                    } for u in s.users
                 ]
             })
+
 
         return jsonify({
             "studies": result,
