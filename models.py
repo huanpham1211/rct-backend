@@ -47,7 +47,11 @@ class Study(db.Model):
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
     timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    is_randomized = db.Column(db.Boolean, default=False)
+    randomization_type = db.Column(db.String(50))  # 'block', 'simple', etc.
+    block_size = db.Column(db.Integer)
+    stratification_factors = db.Column(db.Text)  # JSON string
+    treatment_arms = db.relationship('TreatmentArm', backref='study', cascade="all, delete", lazy=True)
     # ➕ Relationship to StudySite
     study_sites = db.relationship('StudySite', backref='study', lazy='joined')
     users = db.relationship(
@@ -79,5 +83,14 @@ class StudyUser(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TreatmentArm(db.Model):
+    __tablename__ = 'treatment_arm'
+    id = db.Column(db.Integer, primary_key=True)
+    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    allocation_ratio = db.Column(db.Integer, default=1)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
 
