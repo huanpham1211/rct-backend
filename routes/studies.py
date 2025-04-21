@@ -126,11 +126,16 @@ def update_study(study_id):
         study.timestamp_updated = datetime.utcnow()
         study.updated_by = user_id
        # ✅ Handle RCT fields
-        study.is_randomized = data.get('is_randomized', study.is_randomized)
-        study.randomization_type = data.get('randomization_type', study.randomization_type)
-        study.block_size = data.get('block_size', study.block_size)
-        study.stratification_factors = data.get('stratification_factors', study.stratification_factors)
+        if 'is_randomized' in data:
+            study.is_randomized = data['is_randomized']
+        if 'randomization_type' in data and data['randomization_type']:
+            study.randomization_type = data['randomization_type']
+        if 'block_size' in data and data['block_size']:
+            study.block_size = data['block_size']
+        if 'stratification_factors' in data:
+            study.stratification_factors = data['stratification_factors']
         
+                
         db.session.commit()
         return jsonify({"message": "Study updated"}), 200
     except Exception as e:
