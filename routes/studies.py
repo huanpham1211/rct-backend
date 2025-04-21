@@ -125,15 +125,19 @@ def update_study(study_id):
         study.end_date = parse(end_date_str).date() if end_date_str else None
         study.timestamp_updated = datetime.utcnow()
         study.updated_by = user_id
-       # ✅ Handle RCT fields
+        # ✅ Handle RCT fields
         if 'is_randomized' in data:
             study.is_randomized = data['is_randomized']
-        if 'randomization_type' in data and data['randomization_type']:
-            study.randomization_type = data['randomization_type']
-        if 'block_size' in data and data['block_size']:
-            study.block_size = data['block_size']
+        
+        if 'randomization_type' in data:
+            study.randomization_type = data['randomization_type'] or None
+        
+        if 'block_size' in data:
+            study.block_size = data['block_size'] or None
+        
         if 'stratification_factors' in data:
-            study.stratification_factors = data['stratification_factors']
+            study.stratification_factors = data['stratification_factors'] or None
+
         
                 
         db.session.commit()
