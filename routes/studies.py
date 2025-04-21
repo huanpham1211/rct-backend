@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Study, StudySite, Users, StudyUser 
 from datetime import datetime
 from dateutil.parser import parse
+from datetime import date
 
 studies_bp = Blueprint("studies", __name__, url_prefix="/api/studies")
 
@@ -219,37 +220,42 @@ def unassign_user_from_study():
 @studies_bp.route('/assigned-studies', methods=['GET'])
 @jwt_required()
 def get_assigned_studies():
-    from datetime import date
+    try:
+        from datetime import date
+        today = date.today()
 
-    user_id = get_jwt_identity()
-    user = Users.query.get(user_id)
+        user_id = get_jwt_identity()
+        user = Users.query.get(user_id)
 
-    today = date.today()
+        if user.role == 'admin':
+            query = Study.query
+        else:
+            query = Study.query.join(StudyUser).filter(StudyUser.user_id == user_id)
 
-    if user.role == 'admin':
-        query = Study.query
-    else:
-        query = Study.query.join(StudyUser).filter(StudyUser.user_id == user_id)
+        query = query.filter((Study.end_date == None) | (Study.end_date >= today))
 
-    query = query.filter((Study.end_date == None) | (Study.end_date >= today))
+        studies = query.all()
 
-    studies = query.all()
+        results = []
+        for s in studies:
+            results.append({
+                "id": s.id,
+                "name": s.name,
+                "protocol_number": s.protocol_number,
+                "end_date": s.end_date.isoformat() if s.end_date else None,
+                "sites": [
+                    {
+                        "id": ss.site.id,
+                        "name": ss.site.name
+                    }
+                    for ss in s.study_sites
+                ]
+            })
 
-    results = []
-    for s in studies:
-        results.append({
-            "id": s.id,
-            "name": s.name,
-            "protocol_number": s.protocol_number,
-            "end_date": s.end_date.isoformat() if s.end_date else None,
-            "sites": [
-                {
-                    "id": ss.site.id,
-                    "name": ss.site.name
-                }
-                for ss in s.study_sites
-            ]
-        })
+        return jsonify(results), 200
+    except Exception as e:
+        import traceback
+        print("🔥 Error in /assigned-studies:\n", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
 
-    return jsonify(studies)
 
