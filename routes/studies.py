@@ -258,4 +258,17 @@ def get_assigned_studies():
         print("🔥 Error in /assigned-studies:\n", traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
+@studies_bp.route('/<int:study_id>/arms', methods=['POST'])
+@jwt_required()
+def add_treatment_arm(study_id):
+    data = request.get_json()
+    arm = TreatmentArm(
+        study_id=study_id,
+        name=data['name'],
+        description=data.get('description'),
+        allocation_ratio=data.get('allocation_ratio', 1)
+    )
+    db.session.add(arm)
+    db.session.commit()
+    return jsonify({"message": "Treatment arm added"}), 201
 
