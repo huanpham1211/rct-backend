@@ -251,5 +251,5 @@ def get_assigned_studies():
             ]
         })
 
-    return jsonify(results)
+    return jsonify(studies)
 
