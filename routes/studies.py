@@ -122,7 +122,12 @@ def update_study(study_id):
         study.end_date = parse(end_date_str).date() if end_date_str else None
         study.timestamp_updated = datetime.utcnow()
         study.updated_by = user_id
-
+       # ✅ Handle RCT fields
+        study.is_randomized = data.get('is_randomized', study.is_randomized)
+        study.randomization_type = data.get('randomization_type', study.randomization_type)
+        study.block_size = data.get('block_size', study.block_size)
+        study.stratification_factors = data.get('stratification_factors', study.stratification_factors)
+        
         db.session.commit()
         return jsonify({"message": "Study updated"}), 200
     except Exception as e:
