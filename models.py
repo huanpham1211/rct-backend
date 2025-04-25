@@ -95,3 +95,31 @@ class TreatmentArm(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))  
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
 
+class StudyVariable(db.Model):
+    __tablename__ = 'study_variable'
+
+    id = db.Column(db.Integer, primary_key=True)
+    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
+    name = db.Column(db.String, nullable=False)
+    variable_type = db.Column(db.String, nullable=False)  # e.g., text, number, select, etc.
+    required = db.Column(db.Boolean, default=False)
+    options = db.Column(db.Text)  # CSV or JSON string for select/multiselect
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class PatientVariable(db.Model):
+    __tablename__ = 'patient_variable'
+
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+    variable_id = db.Column(db.Integer, db.ForeignKey('study_variable.id'), nullable=False)
+    value = db.Column(db.Text, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (db.UniqueConstraint('patient_id', 'variable_id', name='uix_patient_variable'),)
+
