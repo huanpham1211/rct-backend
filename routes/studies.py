@@ -275,7 +275,7 @@ def get_assigned_studies():
         print("🔥 Error in /assigned-studies:\n", traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
-@studies_bp.route('/<int:study_id>/arms', methods=['POST'])
+@studies_bp.route('/<int:study_id>/add-arms', methods=['POST'])
 @jwt_required()
 def add_treatment_arm(study_id):
     data = request.get_json()
@@ -288,4 +288,22 @@ def add_treatment_arm(study_id):
     db.session.add(arm)
     db.session.commit()
     return jsonify({"message": "Treatment arm added"}), 201
+
+@studies_bp.route('/<int:study_id>/get-arms', methods=['GET'])
+@jwt_required()
+def get_treatment_arms(study_id):
+    study = Study.query.get(study_id)
+    if not study:
+        return jsonify({"message": "Study not found"}), 404
+
+    arms = [
+        {
+            "id": arm.id,
+            "name": arm.name,
+            "description": arm.description,
+            "allocation_ratio": arm.allocation_ratio
+        }
+        for arm in study.treatment_arms
+    ]
+    return jsonify(arms), 200
 
