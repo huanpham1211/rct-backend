@@ -92,5 +92,6 @@ class TreatmentArm(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     allocation_ratio = db.Column(db.Integer, default=1)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))  
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
 
