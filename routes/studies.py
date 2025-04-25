@@ -330,7 +330,7 @@ def delete_treatment_arm(arm_id):
     db.session.commit()
     return jsonify({"message": "Treatment arm deleted"}), 200
 
-@app.route("/api/studies/<int:study_id>/variables", methods=["POST"])
+@studies_bp.route("/<int:study_id>/variables", methods=["POST"])
 @jwt_required()
 def add_study_variable(study_id):
     data = request.get_json()
@@ -349,7 +349,7 @@ def add_study_variable(study_id):
     db.session.commit()
     return jsonify({"message": "Variable added", "id": variable.id}), 201
 
-@app.route("/api/studies/<int:study_id>/variables", methods=["GET"])
+@studies_bp.route("/<int:study_id>/variables", methods=["GET"])
 @jwt_required()
 def get_study_variables(study_id):
     variables = StudyVariable.query.filter_by(study_id=study_id).all()
@@ -363,7 +363,7 @@ def get_study_variables(study_id):
         } for v in variables
     ])
 
-@app.route("/api/studies/variables/<int:var_id>", methods=["PUT"])
+@studies_bp.route("/variables/<int:var_id>", methods=["PUT"])
 @jwt_required()
 def update_study_variable(var_id):
     data = request.get_json()
@@ -376,7 +376,7 @@ def update_study_variable(var_id):
     db.session.commit()
     return jsonify({"message": "Variable updated"})
 
-@app.route("/api/studies/variables/<int:var_id>", methods=["DELETE"])
+@studies_bp.route("/variables/<int:var_id>", methods=["DELETE"])
 @jwt_required()
 def delete_study_variable(var_id):
     variable = StudyVariable.query.get_or_404(var_id)
