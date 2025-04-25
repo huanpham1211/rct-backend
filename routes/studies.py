@@ -309,6 +309,9 @@ def get_treatment_arms(study_id):
             "allocation_ratio": arm.allocation_ratio
         }
         for arm in study.treatment_arms
+    ]
+
+    return jsonify(arms), 200
 
 @studies_bp.route('/arms/<int:arm_id>', methods=['DELETE'])
 @jwt_required()
