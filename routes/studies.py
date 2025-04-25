@@ -278,16 +278,21 @@ def get_assigned_studies():
 @studies_bp.route('/<int:study_id>/add-arms', methods=['POST'])
 @jwt_required()
 def add_treatment_arm(study_id):
+    user_id = get_jwt_identity()
     data = request.get_json()
+
     arm = TreatmentArm(
         study_id=study_id,
         name=data['name'],
         description=data.get('description'),
-        allocation_ratio=data.get('allocation_ratio', 1)
+        allocation_ratio=data.get('allocation_ratio', 1),
+        created_by=user_id,
+        timestamp_created=datetime.utcnow()
     )
     db.session.add(arm)
     db.session.commit()
     return jsonify({"message": "Treatment arm added"}), 201
+
 
 @studies_bp.route('/<int:study_id>/get-arms', methods=['GET'])
 @jwt_required()
@@ -304,6 +309,21 @@ def get_treatment_arms(study_id):
             "allocation_ratio": arm.allocation_ratio
         }
         for arm in study.treatment_arms
-    ]
-    return jsonify(arms), 200
+
+@studies_bp.route('/arms/<int:arm_id>', methods=['DELETE'])
+@jwt_required()
+def delete_treatment_arm(arm_id):
+    user_id = get_jwt_identity()
+    arm = TreatmentArm.query.get(arm_id)
+
+    if not arm:
+        return jsonify({"message": "Treatment arm not found"}), 404
+
+    current_user = Users.query.get(user_id)
+    if current_user.role != 'admin' and arm.created_by != user_id:
+        return jsonify({"message": "Access denied"}), 403
+
+    db.session.delete(arm)
+    db.session.commit()
+    return jsonify({"message": "Treatment arm deleted"}), 200
 
