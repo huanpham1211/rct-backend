@@ -330,3 +330,57 @@ def delete_treatment_arm(arm_id):
     db.session.commit()
     return jsonify({"message": "Treatment arm deleted"}), 200
 
+@app.route("/api/studies/<int:study_id>/variables", methods=["POST"])
+@jwt_required()
+def add_study_variable(study_id):
+    data = request.get_json()
+    user_id = get_jwt_identity()
+
+    variable = StudyVariable(
+        study_id=study_id,
+        name=data.get("name"),
+        variable_type=data.get("variable_type"),
+        required=data.get("required", False),
+        options=data.get("options"),
+        created_by=user_id,
+        updated_by=user_id
+    )
+    db.session.add(variable)
+    db.session.commit()
+    return jsonify({"message": "Variable added", "id": variable.id}), 201
+
+@app.route("/api/studies/<int:study_id>/variables", methods=["GET"])
+@jwt_required()
+def get_study_variables(study_id):
+    variables = StudyVariable.query.filter_by(study_id=study_id).all()
+    return jsonify([
+        {
+            "id": v.id,
+            "name": v.name,
+            "variable_type": v.variable_type,
+            "required": v.required,
+            "options": v.options
+        } for v in variables
+    ])
+
+@app.route("/api/studies/variables/<int:var_id>", methods=["PUT"])
+@jwt_required()
+def update_study_variable(var_id):
+    data = request.get_json()
+    variable = StudyVariable.query.get_or_404(var_id)
+    variable.name = data.get("name", variable.name)
+    variable.variable_type = data.get("variable_type", variable.variable_type)
+    variable.required = data.get("required", variable.required)
+    variable.options = data.get("options", variable.options)
+    variable.updated_by = get_jwt_identity()
+    db.session.commit()
+    return jsonify({"message": "Variable updated"})
+
+@app.route("/api/studies/variables/<int:var_id>", methods=["DELETE"])
+@jwt_required()
+def delete_study_variable(var_id):
+    variable = StudyVariable.query.get_or_404(var_id)
+    db.session.delete(variable)
+    db.session.commit()
+    return jsonify({"message": "Variable deleted"})
+
