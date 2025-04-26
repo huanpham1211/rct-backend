@@ -14,8 +14,12 @@ class Users(db.Model):
     last_name = db.Column(db.String(100))
     title = db.Column(db.String(100))
 
+from datetime import datetime
+from . import db
+
 class Patient(db.Model):
     __tablename__ = "patient"
+
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, nullable=True)
     site_id = db.Column(db.Integer, nullable=True)
@@ -23,9 +27,23 @@ class Patient(db.Model):
     name = db.Column(db.String(255), nullable=False)
     dob = db.Column(db.Date, nullable=False)
     sex = db.Column(db.String(10), nullable=False)
+    phone = db.Column(db.String(50), nullable=True)
+    email = db.Column(db.String(255), nullable=True)
+    ethnicity = db.Column(db.String(50), nullable=True)
+    pregnancy_status = db.Column(db.String(50), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    consent_date = db.Column(db.Date, nullable=True)
+    enrollment_status = db.Column(db.String(50), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+
     entered_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    updated_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
     timestamp_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # 🔗 Relationships
+    patient_variables = db.relationship("PatientVariable", backref="patient", cascade="all, delete-orphan")
+
 
 class Site(db.Model):
     __tablename__ = "site"
