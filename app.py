@@ -8,10 +8,11 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 import os
-from models import db, Users, Site, StudySite  # ✅ instead of from app
+from models import db, Users, Site, StudySite, Patient  # ✅ instead of from app
 from routes.users import users_bp
 from routes.sites import sites_bp
 from routes.studies import studies_bp
+from routes.patients import patients_bp
 
 # App setup
 app = Flask(__name__)
@@ -36,6 +37,7 @@ CORS(app, resources={r"/*": {"origins": ["https://rctmanager.com"]}})
 app.register_blueprint(users_bp)
 app.register_blueprint(sites_bp)
 app.register_blueprint(studies_bp)
+app.register_blueprint(patients_bp)
 
 # Database Models
 
