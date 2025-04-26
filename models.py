@@ -14,8 +14,6 @@ class Users(db.Model):
     last_name = db.Column(db.String(100))
     title = db.Column(db.String(100))
 
-from datetime import datetime
-from . import db
 
 class Patient(db.Model):
     __tablename__ = "patient"
