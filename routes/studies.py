@@ -339,6 +339,7 @@ def add_study_variable(study_id):
     variable = StudyVariable(
         study_id=study_id,
         name=data.get("name"),
+        description=data.get("description"),
         variable_type=data.get("variable_type"),
         required=data.get("required", False),
         options=data.get("options"),
@@ -357,6 +358,7 @@ def get_study_variables(study_id):
         {
             "id": v.id,
             "name": v.name,
+            "description": v.description,
             "variable_type": v.variable_type,
             "required": v.required,
             "options": v.options
@@ -369,6 +371,7 @@ def update_study_variable(var_id):
     data = request.get_json()
     variable = StudyVariable.query.get_or_404(var_id)
     variable.name = data.get("name", variable.name)
+    variable.description = data.get("description", variable.description)
     variable.variable_type = data.get("variable_type", variable.variable_type)
     variable.required = data.get("required", variable.required)
     variable.options = data.get("options", variable.options)
