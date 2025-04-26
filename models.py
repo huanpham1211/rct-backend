@@ -101,6 +101,7 @@ class StudyVariable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
     name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=True)  # e.g., "Tăng huyết áp
     variable_type = db.Column(db.String, nullable=False)  # e.g., text, number, select, etc.
     required = db.Column(db.Boolean, default=False)
     options = db.Column(db.Text)  # CSV or JSON string for select/multiselect
