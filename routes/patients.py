@@ -13,7 +13,7 @@ def create_patient():
         user_id = get_jwt_identity()
         now = datetime.utcnow()
 
-        # ✅ Create patient
+        # ✅ Create patient (basic info)
         patient = Patient(
             name=data.get("name"),
             dob=data.get("dob"),
@@ -35,21 +35,40 @@ def create_patient():
             timestamp_updated=now
         )
         db.session.add(patient)
-        db.session.flush()  # So patient.id is available before commit
+        db.session.flush()  # Important: get patient.id now without committing yet
 
-        # ✅ Insert patient_variable entries
-        study_vars = data.get("study_variables", [])  # List of dicts
+        # ✅ Insert study variables
+        study_vars = data.get("study_variables", [])  # list of dicts
+
         for var in study_vars:
-            variable = PatientVariable(
-                patient_id=patient.id,
-                variable_id=var["variable_id"],
-                value=var["value"],
-                created_by=user_id,
-                updated_by=user_id,
-                timestamp_created=now,
-                timestamp_updated=now
-            )
-            db.session.add(variable)
+            variable_id = var.get("variable_id")
+            value = var.get("value")
+
+            # 🔥 Check if multiselect
+            if isinstance(value, list):
+                for v in value:
+                    patient_var = PatientVariable(
+                        patient_id=patient.id,
+                        variable_id=variable_id,
+                        value=v,
+                        created_by=user_id,
+                        updated_by=user_id,
+                        timestamp_created=now,
+                        timestamp_updated=now
+                    )
+                    db.session.add(patient_var)
+            else:
+                # Single value
+                patient_var = PatientVariable(
+                    patient_id=patient.id,
+                    variable_id=variable_id,
+                    value=value,
+                    created_by=user_id,
+                    updated_by=user_id,
+                    timestamp_created=now,
+                    timestamp_updated=now
+                )
+                db.session.add(patient_var)
 
         db.session.commit()
         return jsonify({"message": "✅ Patient and variables saved"}), 201
@@ -64,7 +83,7 @@ def get_patient(patient_id):
     try:
         patient = Patient.query.get_or_404(patient_id)
 
-        # Core patient fields
+        # Core patient info
         patient_data = {
             "id": patient.id,
             "name": patient.name,
@@ -83,7 +102,7 @@ def get_patient(patient_id):
             "site_id": patient.site_id,
         }
 
-        # Custom study variables
+        # Study variables
         variable_data = []
         for pv in patient.patient_variables:
             variable_data.append({
@@ -102,4 +121,3 @@ def get_patient(patient_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
