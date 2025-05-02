@@ -121,6 +121,7 @@ class StudyVariable(db.Model):
     variable_type = db.Column(db.String, nullable=False)  # e.g., text, number, select, etc.
     required = db.Column(db.Boolean, default=False)
     options = db.Column(db.Text)  # CSV or JSON string for select/multiselect
+    entry_stage = db.Column(db.String(50))  # ✅ NEW COLUMN
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     timestamp_created = db.Column(db.DateTime, default=datetime.utcnow)
