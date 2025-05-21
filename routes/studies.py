@@ -343,6 +343,7 @@ def add_study_variable(study_id):
         variable_type=data.get("variable_type"),
         required=data.get("required", False),
         options=data.get("options"),
+        entry_stage=data.get("entry_stage"),  # ✅ NEW
         created_by=user_id,
         updated_by=user_id
     )
@@ -362,6 +363,7 @@ def get_study_variables(study_id):
             "variable_type": v.variable_type,
             "required": v.required,
             "options": v.options
+            "entry_stage": v.entry_stage  # ✅ NEW
         } for v in variables
     ])
 
@@ -375,6 +377,7 @@ def update_study_variable(var_id):
     variable.variable_type = data.get("variable_type", variable.variable_type)
     variable.required = data.get("required", variable.required)
     variable.options = data.get("options", variable.options)
+    variable.entry_stage = data.get("entry_stage", variable.entry_stage)  # ✅ NEW
     variable.updated_by = get_jwt_identity()
     db.session.commit()
     return jsonify({"message": "Variable updated"})
